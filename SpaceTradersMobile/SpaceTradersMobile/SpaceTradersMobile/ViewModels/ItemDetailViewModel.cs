@@ -7,7 +7,7 @@ using Xamarin.Forms;
 namespace SpaceTradersMobile.ViewModels
 {
    [QueryProperty( nameof( ItemId ), nameof( ItemId ) )]
-   public class ItemDetailViewModel : BaseViewModel
+   public class ItemDetailViewModel : DataStoreBaseViewModel
    {
       private string itemId;
       private string text;

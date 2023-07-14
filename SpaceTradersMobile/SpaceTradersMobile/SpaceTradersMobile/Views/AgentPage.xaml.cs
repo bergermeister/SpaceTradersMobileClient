@@ -1,7 +1,9 @@
 ﻿namespace SpaceTradersMobile.Views
 {
    using Newtonsoft.Json;
+   using System.Collections.Generic;
    using System.Diagnostics;
+   using System.Net.Http.Headers;
    using Xamarin.Forms;
    using Xamarin.Forms.Xaml;
 
@@ -9,7 +11,9 @@
    public partial class AgentPage : ContentPage
    {
       private ViewModels.AgentViewModel accountViewModel;
-      private Services.SpaceTraderAPI api = DependencyService.Get< Services.SpaceTraderAPI >( );
+      private Services.AgentAPI agentAPI = DependencyService.Get< Services.AgentAPI >( );
+      private Services.ContractAPI contractAPI = DependencyService.Get< Services.ContractAPI >( );
+      private Services.Navigation waypointAPI = DependencyService.Get< Services.Navigation >( );
 
       public AgentPage( )
       {
@@ -21,12 +25,11 @@
 
       protected override void OnAppearing( )
       {
-         getAccount( );
-         getSystemWaypoints( );
-         getAvailableShips( );
-         //getWaypoint( );
-         //getContracts( );
-         //acceptContract( );
+         if( Application.Current.Properties.ContainsKey( "agentToken" ) )
+         {
+            getAgent( );
+            this.TokenEntry.Text = Application.Current.Properties[ "agentToken" ] as string;
+         }
       }
 
       protected override void OnDisappearing( )
@@ -34,9 +37,9 @@
          base.OnDisappearing( );
       }
 
-      private async void getAccount( )
+      private async void getAgent( )
       {
-         var agent = await api.GetAgent( );
+         var agent = await agentAPI.GetCurrent( );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( agent != null )
@@ -51,9 +54,36 @@
          } );         
       }
 
+      private async void registerAgent( string symbol, string startingFaction )
+      {
+         var agentToken = await agentAPI.Register( symbol, startingFaction );
+         if( agentToken.Value == null )
+         {
+            await DisplayAlert( "ERROR", "Agent Registration Failed.", "Ok" );
+         }
+         else
+         {
+            this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
+            {
+               this.accountViewModel.Agent = agentToken.Value;
+               Debug.WriteLine( JsonConvert.SerializeObject( agentToken.Value ) );
+            } );
+         }
+      }
+
+      private async void updateToken( string token )
+      {
+         Services.HttpService httpService = DependencyService.Get< Services.HttpService >( );
+         httpService.Client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue( "Bearer", token );
+         Application.Current.Properties[ "agentToken" ] = token;
+         await Application.Current.SavePropertiesAsync( );
+         getAgent( );
+      }
+
       private async void getWaypoint( )
       {
-         var waypoint = await api.GetWaypoint( "X1-MP2", "X1-MP2-12220Z" );
+         var waypoint = await waypointAPI.GetWaypoint( "X1-MP2", "X1-MP2-12220Z" );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( waypoint != null )
@@ -69,7 +99,7 @@
 
       private async void getSystemWaypoints( )
       {
-         var waypoints = await api.GetSystemWaypoints( "X1-MP2" );
+         var waypoints = await waypointAPI.GetSystemWaypoints( "X1-MP2" );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( waypoints != null )
@@ -85,7 +115,7 @@
 
       private async void getContracts( )
       {
-         var contracts = await api.GetContracts( );
+         var contracts = await contractAPI.GetCurrent( );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( contracts != null )
@@ -101,7 +131,7 @@
 
       private async void acceptContract( )
       {
-         var contract = await api.AcceptContract( "cljutox5p0v0as60cxcucpy45" );
+         var contract = await contractAPI.AcceptContract( "cljutox5p0v0as60cxcucpy45" );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( contract != null )
@@ -117,7 +147,7 @@
 
       private async void getAvailableShips( )
       {
-         var ships = await api.GetAvailableShips( "X1-MP2", "X1-MP2-91657X" );
+         var ships = await waypointAPI.GetAvailableShips( "X1-MP2", "X1-MP2-91657X" );
          this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
          {
             if( ships != null )
@@ -129,6 +159,19 @@
                Debug.WriteLine( "Ships is null" );
             }
          } );
+      }
+
+      private void RegisterNewAgentClicked( object sender, System.EventArgs eventArgs )
+      {
+         string symbol = this.SymbolEntry.Text;
+         string startingFaction = this.StartingFactionEntry.Text;
+         this.registerAgent( symbol, startingFaction );
+      }
+
+      private void UpdateTokenClicked( object sender, System.EventArgs eventArgs )
+      {
+         string newToken = this.TokenEntry.Text;
+
       }
    }
 }

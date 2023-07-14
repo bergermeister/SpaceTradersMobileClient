@@ -1,42 +1,47 @@
-﻿using SpaceTradersMobile.Models;
-using SpaceTradersMobile.Services;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Xamarin.Forms;
-
-namespace SpaceTradersMobile.ViewModels
+﻿namespace SpaceTradersMobile.ViewModels
 {
+   using System;
+   using System.Collections.Generic;
+   using System.ComponentModel;
+   using System.Runtime.CompilerServices;
+   using System.Text;
+
    public class BaseViewModel : INotifyPropertyChanged
    {
-      public IDataStore<Item> DataStore => DependencyService.Get<IDataStore<Item>>( );
+      private bool isBusy = false;
+      private string title = string.Empty;
 
-      bool isBusy = false;
       public bool IsBusy
       {
-         get { return isBusy; }
-         set { SetProperty( ref isBusy, value ); }
+         get { return( this.isBusy ); }
+         set { SetProperty( ref this.isBusy, value ); }
       }
 
-      string title = string.Empty;
       public string Title
       {
-         get { return title; }
-         set { SetProperty( ref title, value ); }
+         get { return( this.title ); }
+         set { SetProperty( ref this.title, value ); }
       }
 
-      protected bool SetProperty<T>( ref T backingStore, T value,
-          [CallerMemberName] string propertyName = "",
-          Action onChanged = null )
+      protected bool SetProperty< T >( ref T backingStore, T value,
+         [CallerMemberName] string propertyName = "",
+         Action onChanged = null )
       {
-         if( EqualityComparer<T>.Default.Equals( backingStore, value ) )
-            return false;
+         bool propertySet = false;
 
-         backingStore = value;
-         onChanged?.Invoke( );
-         OnPropertyChanged( propertyName );
-         return true;
+         if( EqualityComparer< T >.Default.Equals( backingStore, value ) )
+         {
+            propertySet = false;
+         }
+         else
+         {
+            backingStore = value;
+            onChanged?.Invoke( );
+            OnPropertyChanged( propertyName );
+            propertySet = true;
+         }
+
+         return( propertySet );
       }
 
       #region INotifyPropertyChanged

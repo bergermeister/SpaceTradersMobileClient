@@ -1,7 +1,7 @@
-﻿namespace SpaceTradersMobile.Models
-{
-   using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace SpaceTradersMobile.Models
+{
    public class Cargo
    {
       public long capacity { get; set; }

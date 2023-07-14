@@ -5,6 +5,8 @@
              xmlns:vm="clr-namespace:SpaceTradersMobile.ViewModels"
              Title="{Binding Title}">
    <StackLayout Spacing="5" Padding="15">
+      <!-- Current Agent Details -->
+      <Label Text="Current Agent" FontAttributes="Bold" />
       <StackLayout Orientation="Horizontal">
          <Label Text="Account Id:" WidthRequest="100" HorizontalTextAlignment="End" />
          <Label Text="{Binding AccountId}" />
@@ -25,5 +27,25 @@
          <Label Text="Starting Faction:" />
          <Label Text="{Binding StartingFaction}" />
       </StackLayout>
+      <BoxView HeightRequest="1" Color="Azure" Margin="10" />
+      
+      <!-- Register New Agent -->
+      <Label Text="Register New Agent" FontAttributes="Bold" />
+      <StackLayout Orientation="Horizontal">
+         <Label Text="Symbol:" WidthRequest="100" HorizontalTextAlignment="End" Margin="0,6,0,6" />
+         <Entry x:Name="SymbolEntry" WidthRequest="300" />
+      </StackLayout>
+      <StackLayout Orientation="Horizontal">
+         <Label Text="Starting Faction:" Margin="0,6,0,6" />
+         <Entry x:Name="StartingFactionEntry" WidthRequest="300" />
+      </StackLayout>
+      <Button Text="Register New Agent" WidthRequest="200" Margin="10" Clicked="RegisterNewAgentClicked" />
+      <BoxView HeightRequest="1" Color="Azure" Margin="10" />
+      
+      <!-- Token View/Edit -->
+      <Label Text="View/Edit Token" FontAttributes="Bold" />
+      <Label Text="Token:"/>
+      <Editor x:Name="TokenEntry" HeightRequest="200" />
+      <Button Text="Update Token" WidthRequest="200" Margin="10" Clicked="UpdateTokenClicked" />
    </StackLayout>   
 </ContentPage>

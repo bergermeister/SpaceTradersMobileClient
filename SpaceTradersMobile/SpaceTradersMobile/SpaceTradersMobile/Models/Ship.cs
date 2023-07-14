@@ -1,7 +1,7 @@
-﻿namespace SpaceTradersMobile.Models
-{
-   using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace SpaceTradersMobile.Models
+{
    public class Ship
    {
       public string type { get; set; }

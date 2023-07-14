@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace SpaceTradersMobile.ViewModels
 {
-   public class LoginViewModel : BaseViewModel
+   public class LoginViewModel : DataStoreBaseViewModel
    {
       public Command LoginCommand { get; }
 

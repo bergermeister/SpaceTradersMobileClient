@@ -1,8 +1,7 @@
-﻿namespace SpaceTradersMobile.Models
-{
-   using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-   public class Terms
+namespace SpaceTradersMobile.Models
+{   public class Terms
    {
       public string deadline { get; set; }
       public Payment payment { get; set; }

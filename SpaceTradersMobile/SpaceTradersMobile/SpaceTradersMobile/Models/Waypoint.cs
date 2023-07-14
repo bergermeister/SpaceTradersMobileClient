@@ -1,7 +1,7 @@
-﻿namespace SpaceTradersMobile.Models
-{
-   using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
+namespace SpaceTradersMobile.Models
+{
    /**
     * Every waypoint has a symbol such as 'X1-DF55-20250Z' made up of the sector, system, and location of the 
     * waypoint. For example, 'X1' is the sector, 'X1-DF55

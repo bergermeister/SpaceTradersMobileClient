@@ -8,7 +8,7 @@ using Xamarin.Forms;
 
 namespace SpaceTradersMobile.ViewModels
 {
-   public class ItemsViewModel : BaseViewModel
+   public class ItemsViewModel : DataStoreBaseViewModel
    {
       private Item _selectedItem;
 

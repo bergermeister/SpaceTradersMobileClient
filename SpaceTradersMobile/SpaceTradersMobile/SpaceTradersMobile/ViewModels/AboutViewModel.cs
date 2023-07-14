@@ -5,7 +5,7 @@ using Xamarin.Forms;
 
 namespace SpaceTradersMobile.ViewModels
 {
-   public class AboutViewModel : BaseViewModel
+   public class AboutViewModel : DataStoreBaseViewModel
    {
       public AboutViewModel( )
       {

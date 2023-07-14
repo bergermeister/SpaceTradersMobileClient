@@ -4,7 +4,7 @@
    using System.Collections.Generic;
    using System.Text;
 
-   internal class AgentViewModel : BaseViewModel
+   internal class AgentViewModel : DataStoreBaseViewModel
    {
       private Models.Agent agent;
 

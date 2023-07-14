@@ -1,12 +1,10 @@
-﻿using SpaceTradersMobile.Services;
-using SpaceTradersMobile.Views;
-using System;
-using System.Diagnostics;
-using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
-
-namespace SpaceTradersMobile
+﻿namespace SpaceTradersMobile
 {
+   using SpaceTradersMobile.Services;
+   using System.Diagnostics;
+   using System.Net.Http.Headers;
+   using Xamarin.Forms;
+
    public partial class App : Application
    {
 
@@ -15,7 +13,20 @@ namespace SpaceTradersMobile
          InitializeComponent( );
 
          DependencyService.Register< MockDataStore >( );
-         DependencyService.Register< SpaceTraderAPI >( );
+         DependencyService.Register< TokenDataStore >( );
+         DependencyService.Register< HttpService >( );
+         DependencyService.Register< AgentAPI >( );
+         DependencyService.Register< ContractAPI >( );
+         DependencyService.Register< Navigation >( );
+
+         if( Application.Current.Properties.ContainsKey( "agentToken" ) )
+         {
+            Services.HttpService httpService = DependencyService.Get< Services.HttpService >( );
+            httpService.Client.DefaultRequestHeaders.Authorization =
+               new AuthenticationHeaderValue( "Bearer",
+                  Application.Current.Properties[ "agentToken" ] as string );
+         }
+
          MainPage = new AppShell( );
       }
 
