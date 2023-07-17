@@ -10,6 +10,7 @@
    using System.Threading.Tasks;
    using Xamarin.Forms;
    using System.Diagnostics;
+   using System.Collections.ObjectModel;
 
    class AgentAPI
    {
@@ -91,11 +92,43 @@
             {
                string jsonString = await reader.ReadToEndAsync( );
                JObject jsonObject = JObject.Parse( jsonString );
-               agent = jsonObject[ "data" ].ToObject<Models.Agent>( );
+               agent = jsonObject[ "data" ].ToObject< Models.Agent >( );
             }
          }
 
          return( agent );
       }
+   
+      public async Task< List< Models.Faction > > GetFactions( )
+      {
+         const string requestUri = "factions";
+         List< Models.Faction > factions = null;
+
+         // Get the response.
+         HttpResponseMessage response = await this.client.GetAsync( requestUri );
+
+         if( response.StatusCode == System.Net.HttpStatusCode.OK )
+         {
+            // Get the response content.
+            HttpContent responseContent = response.Content;
+
+            // Get the stream of the content.
+            using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+            {
+               string jsonString = await reader.ReadToEndAsync( );
+               JObject jsonObject = JObject.Parse( jsonString );
+               factions = jsonObject[ "data" ].ToObject< List< Models.Faction > >( );
+            }
+         }
+
+         return( factions );
+      }
+
+      /*
+      public async Task< List< Models.Faction > > GetCurrentFactions( )
+      {
+
+      }
+      */
    }
 }

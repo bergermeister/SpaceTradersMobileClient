@@ -37,7 +37,7 @@
       </StackLayout>
       <StackLayout Orientation="Horizontal">
          <Label Text="Starting Faction:" Margin="0,6,0,6" />
-         <Entry x:Name="StartingFactionEntry" WidthRequest="300" />
+         <Picker x:Name="FactionPicker" ItemsSource="{Binding factions}" ItemDisplayBinding="{Binding symbol}"/>
       </StackLayout>
       <Button Text="Register New Agent" WidthRequest="200" Margin="10" Clicked="RegisterNewAgentClicked" />
       <BoxView HeightRequest="1" Color="Azure" Margin="10" />

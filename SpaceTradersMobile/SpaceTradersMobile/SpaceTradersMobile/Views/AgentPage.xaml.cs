@@ -1,7 +1,7 @@
 ﻿namespace SpaceTradersMobile.Views
 {
    using Newtonsoft.Json;
-   using System.Collections.Generic;
+   using System.Collections.ObjectModel;
    using System.Diagnostics;
    using System.Net.Http.Headers;
    using Xamarin.Forms;
@@ -14,17 +14,22 @@
       private Services.AgentAPI agentAPI = DependencyService.Get< Services.AgentAPI >( );
       private Services.ContractAPI contractAPI = DependencyService.Get< Services.ContractAPI >( );
       private Services.Navigation waypointAPI = DependencyService.Get< Services.Navigation >( );
+      private ObservableCollection< Models.Faction > factions;
 
       public AgentPage( )
       {
          InitializeComponent( );
 
          this.accountViewModel = new ViewModels.AgentViewModel( );
-         BindingContext = this.accountViewModel;
+         this.factions = new ObservableCollection< Models.Faction >( );
+         this.BindingContext = this.accountViewModel;
+         this.FactionPicker.BindingContext = this;
+         this.FactionPicker.ItemsSource = this.factions;
       }
 
       protected override void OnAppearing( )
       {
+         getFactions( );
          if( Application.Current.Properties.ContainsKey( "agentToken" ) )
          {
             getAgent( );
@@ -52,6 +57,22 @@
                Debug.WriteLine( "Agent is null" );
             }
          } );         
+      }
+
+      private async void getFactions( )
+      {
+         var availableFactions = await agentAPI.GetFactions( );
+         if( availableFactions != null )
+         {
+            this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
+            {
+               this.factions.Clear( );
+               foreach( var faction in availableFactions )
+               {
+                  this.factions.Add( faction );
+               }
+            } );
+         }
       }
 
       private async void registerAgent( string symbol, string startingFaction )
@@ -164,14 +185,14 @@
       private void RegisterNewAgentClicked( object sender, System.EventArgs eventArgs )
       {
          string symbol = this.SymbolEntry.Text;
-         string startingFaction = this.StartingFactionEntry.Text;
+         string startingFaction = ( this.FactionPicker.SelectedItem as Models.Faction ).symbol; //this.StartingFactionEntry.Text;
          this.registerAgent( symbol, startingFaction );
       }
 
       private void UpdateTokenClicked( object sender, System.EventArgs eventArgs )
       {
          string newToken = this.TokenEntry.Text;
-
+         updateToken( newToken );
       }
    }
 }
