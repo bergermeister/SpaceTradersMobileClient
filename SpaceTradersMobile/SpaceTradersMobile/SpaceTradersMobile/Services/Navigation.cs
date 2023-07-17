@@ -1,48 +1,76 @@
 ﻿namespace SpaceTradersMobile.Services
 {
+   using Newtonsoft.Json;
    using Newtonsoft.Json.Linq;
    using System;
    using System.Collections.Generic;
    using System.IO;
    using System.Net.Http;
    using System.Net.Http.Headers;
+   using System.Runtime.CompilerServices;
+   using System.Text;
+   using System.Threading;
    using System.Threading.Tasks;
    using Xamarin.Forms;
 
    public class Navigation
    {
       private HttpService httpService;
-      private HttpClient client;
+      private HttpClient authClient;
+      private HttpClient unauthClient;
 
       public Navigation( )
       {
          this.httpService = DependencyService.Get< HttpService >( );
-         this.client = httpService.Client;
+         this.authClient = httpService.AuthenticatedClient;
+         this.unauthClient = httpService.UnauthenticatedClient;
       }
 
-      public async Task< List< Models.System > > GetSystems( )
+      public async void DownloadSystems( )
       {
-         const string requestUri = "systems";
-         List< Models.System > systems = null;
-
-         // Get the response.
-         HttpResponseMessage response = await client.GetAsync( requestUri );
-
-         if( response.StatusCode == System.Net.HttpStatusCode.OK )
+         string requestUri;
+         Models.Meta meta = new Models.Meta( )
          {
-            // Get the response content.
-            HttpContent responseContent = response.Content;
+            total = 5000,
+            limit = 20,
+            page = 1
+         };
+         List< Models.System > systems;
+         long page = 1;
 
-            // Get the stream of the content.
-            using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+         do
+         {
+            // Get the response.
+            requestUri = String.Format( "systems?limit={0}&page={1}", meta.limit, page );
+            HttpResponseMessage response = await this.unauthClient.GetAsync( requestUri );
+
+            if( response.StatusCode == System.Net.HttpStatusCode.OK )
             {
-               string jsonString = await reader.ReadToEndAsync( );
-               JObject jsonObject = JObject.Parse( jsonString );
-               systems = jsonObject[ "data" ].ToObject< List< Models.System > >( );
-            }
-         }
+               // Get the response content.
+               HttpContent responseContent = response.Content;
 
-         return ( systems );
+               // Get the stream of the content.
+               using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+               {
+                  string jsonString = await reader.ReadToEndAsync( );
+                  JObject jsonObject = JObject.Parse( jsonString );
+                  meta = jsonObject[ "meta" ].ToObject< Models.Meta >( );
+
+                  systems = jsonObject[ "data" ].ToObject< List< Models.System > >( );
+                  foreach( var system in systems )
+                  {
+                     await App.SystemDatabase.SaveSystemAsync( system );
+                  }
+               }
+               
+               page++;
+               Thread.Sleep( 100 );
+            }
+            else
+            {
+               break;
+            }
+         } while( page < ( meta.total / meta.limit ) );
       }
 
       public async Task< Models.Waypoint > GetWaypoint( string systemString, string waypointString )
@@ -51,7 +79,7 @@
          Models.Waypoint waypoint = null;
 
          // Get the response.
-         HttpResponseMessage response = await client.GetAsync( requestUri );
+         HttpResponseMessage response = await authClient.GetAsync( requestUri );
 
          if( response.StatusCode == System.Net.HttpStatusCode.OK )
          {
@@ -72,25 +100,44 @@
 
       public async Task< List< Models.Waypoint > > GetSystemWaypoints( string systemString )
       {
-         string requestUri = String.Format( "systems/{0}/waypoints", systemString );
-         List< Models.Waypoint > waypoints = null;
-
-         // Get the response.
-         HttpResponseMessage response = await client.GetAsync( requestUri );
-
-         if( response.StatusCode == System.Net.HttpStatusCode.OK )
+         string requestUri;
+         Models.Meta meta = new Models.Meta( )
          {
-            // Get the response content.
-            HttpContent responseContent = response.Content;
+            total = 5000,
+            limit = 20,
+            page = 1
+         };
+         List< Models.Waypoint > waypoints = new List< Models.Waypoint >( );
+         long page = 1;
 
-            // Get the stream of the content.
-            using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+         do
+         {
+            // Get the response.
+            requestUri = String.Format( "systems/{0}/waypoints?limit={1}&page={2}", systemString, meta.limit, page );
+            HttpResponseMessage response = await this.unauthClient.GetAsync( requestUri );
+
+            if( response.StatusCode == System.Net.HttpStatusCode.OK )
             {
-               string jsonString = await reader.ReadToEndAsync( );
-               JObject jsonObject = JObject.Parse( jsonString );
-               waypoints = jsonObject[ "data" ].ToObject<List<Models.Waypoint>>( );
+               // Get the response content.
+               HttpContent responseContent = response.Content;
+
+               // Get the stream of the content.
+               using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+               {
+                  string jsonString = await reader.ReadToEndAsync( );
+                  JObject jsonObject = JObject.Parse( jsonString );
+                  meta = jsonObject[ "meta" ].ToObject< Models.Meta >( );
+                  waypoints.AddRange( jsonObject[ "data" ].ToObject< List< Models.Waypoint > >( ) );
+               }
+
+               page++;
+               Thread.Sleep( 10 );
             }
-         }
+            else
+            {
+               break;
+            }
+         } while( page < ( meta.total / meta.limit ) );
 
          return ( waypoints );
       }
@@ -101,7 +148,7 @@
          List< Models.Ship > ships = null;
 
          // Get the response.
-         HttpResponseMessage response = await client.GetAsync( requestUri );
+         HttpResponseMessage response = await authClient.GetAsync( requestUri );
 
          if( response.StatusCode == System.Net.HttpStatusCode.OK )
          {

@@ -2,6 +2,7 @@
 {
    using Newtonsoft.Json;
    using System.Collections.Generic;
+   using System.Collections.ObjectModel;
    using System.Diagnostics;
    using System.Net.Http.Headers;
    using Xamarin.Forms;
@@ -14,13 +15,16 @@
       private Services.AgentAPI agentAPI = DependencyService.Get< Services.AgentAPI >( );
       private Services.ContractAPI contractAPI = DependencyService.Get< Services.ContractAPI >( );
       private Services.Navigation waypointAPI = DependencyService.Get< Services.Navigation >( );
+      private ObservableCollection< Models.Faction > factions;
 
       public AgentPage( )
       {
          InitializeComponent( );
 
          this.accountViewModel = new ViewModels.AgentViewModel( );
-         BindingContext = this.accountViewModel;
+         this.BindingContext = this.accountViewModel;
+         this.factions = new ObservableCollection< Models.Faction >( );
+         this.StartingFactionPicker.BindingContext = this.factions;
       }
 
       protected override void OnAppearing( )
@@ -30,6 +34,7 @@
             getAgent( );
             this.TokenEntry.Text = Application.Current.Properties[ "agentToken" ] as string;
          }
+         getFactions( );
       }
 
       protected override void OnDisappearing( )
@@ -54,6 +59,26 @@
          } );         
       }
 
+      private async void getFactions( )
+      {
+         var receivedFactions = await agentAPI.GetFactions( );
+         if( receivedFactions == null )
+         {
+            await DisplayAlert( "ERROR", "Failed to receive Factions.", "Ok" );
+         }
+         else
+         {
+            this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
+            {
+               this.factions.Clear( );
+               foreach( var faction in receivedFactions )
+               {
+                  this.factions.Add( faction );
+               }
+            } );
+         }
+      }
+
       private async void registerAgent( string symbol, string startingFaction )
       {
          var agentToken = await agentAPI.Register( symbol, startingFaction );
@@ -74,7 +99,7 @@
       private async void updateToken( string token )
       {
          Services.HttpService httpService = DependencyService.Get< Services.HttpService >( );
-         httpService.Client.DefaultRequestHeaders.Authorization =
+         httpService.AuthenticatedClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue( "Bearer", token );
          Application.Current.Properties[ "agentToken" ] = token;
          await Application.Current.SavePropertiesAsync( );
@@ -164,14 +189,14 @@
       private void RegisterNewAgentClicked( object sender, System.EventArgs eventArgs )
       {
          string symbol = this.SymbolEntry.Text;
-         string startingFaction = this.StartingFactionEntry.Text;
+         string startingFaction = ( this.StartingFactionPicker.SelectedItem as Models.Faction ).symbol;
          this.registerAgent( symbol, startingFaction );
       }
 
       private void UpdateTokenClicked( object sender, System.EventArgs eventArgs )
       {
          string newToken = this.TokenEntry.Text;
-
+         updateToken( newToken );
       }
    }
 }

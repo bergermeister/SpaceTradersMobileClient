@@ -1,25 +1,29 @@
-﻿namespace SpaceTradersMobile.Services
-{
-   using Newtonsoft.Json.Linq;
-   using Newtonsoft.Json;
-   using System.Collections.Generic;
-   using System.IO;
-   using System.Net.Http.Headers;
-   using System.Net.Http;
-   using System.Text;
-   using System.Threading.Tasks;
-   using Xamarin.Forms;
-   using System.Diagnostics;
+﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http.Headers;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Xamarin.Forms;
+using System.Diagnostics;
+using System.Threading;
+using System;
 
+namespace SpaceTradersMobile.Services
+{
    class AgentAPI
    {
       private HttpService httpService;
-      private HttpClient client;
+      private HttpClient authClient;
+      private HttpClient unauthClient;
 
       public AgentAPI( )
       {
          this.httpService = DependencyService.Get< HttpService >( );
-         this.client = httpService.Client;
+         this.authClient = httpService.AuthenticatedClient;
+         this.unauthClient = httpService.UnauthenticatedClient;
       }
 
       public async Task< KeyValuePair< string, Models.Agent > > Register( string callSign, string requestedFaction )
@@ -35,7 +39,7 @@
             Encoding.UTF8,
             "application/json" );
 
-         HttpResponseMessage response = await this.client.PostAsync( uri, jsonContent );
+         HttpResponseMessage response = await this.unauthClient.PostAsync( uri, jsonContent );
 
          if( response.StatusCode == System.Net.HttpStatusCode.Created )
          {
@@ -48,11 +52,11 @@
                string jsonString = await reader.ReadToEndAsync( );
                JObject jsonObject = JObject.Parse( jsonString );
                agentToken = new KeyValuePair< string, Models.Agent >(
-                  jsonObject[ "token" ].ToString( ),
-                  jsonObject[ "token" ].ToObject< Models.Agent >( ) );
+                  jsonObject[ "data" ][ "token" ].ToString( ),
+                  jsonObject[ "data" ][ "token" ].ToObject< Models.Agent >( ) );
             }
 
-            this.client.DefaultRequestHeaders.Authorization =
+            this.authClient.DefaultRequestHeaders.Authorization =
                new AuthenticationHeaderValue( "Bearer", agentToken.Key );
             Application.Current.Properties[ "agentToken" ] = agentToken.Key;
             await Application.Current.SavePropertiesAsync( );
@@ -79,7 +83,7 @@
          Models.Agent agent = null;
 
          // Get the response.
-         HttpResponseMessage response = await this.client.GetAsync( requestUri );
+         HttpResponseMessage response = await this.authClient.GetAsync( requestUri );
 
          if( response.StatusCode == System.Net.HttpStatusCode.OK )
          {
@@ -96,6 +100,51 @@
          }
 
          return( agent );
+      }
+
+      public async Task< List< Models.Faction > > GetFactions( )
+      {
+         string requestUri;
+         Models.Meta meta = new Models.Meta( )
+         {
+            total = 19,
+            limit = 10,
+            page = 1
+         };
+         List< Models.Faction > factions = null;
+         long page = 1;
+
+         do
+         { 
+            // Get the response.
+            requestUri = String.Format( "factions?limit={0}&page={1}", meta.limit, page );
+            HttpResponseMessage response = await this.unauthClient.GetAsync( requestUri );
+
+            if( response.StatusCode == System.Net.HttpStatusCode.OK )
+            {
+               // Get the response content.
+               HttpContent responseContent = response.Content;
+
+               // Get the stream of the content.
+               using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+               {
+                  string jsonString = await reader.ReadToEndAsync( );
+                  JObject jsonObject = JObject.Parse( jsonString );
+                  meta = jsonObject[ "meta" ].ToObject<Models.Meta>( );
+
+                  factions = jsonObject[ "data" ].ToObject< List< Models.Faction > >( );
+               }
+
+               page++;
+               Thread.Sleep( 100 );
+            }
+            else
+            {
+               break;
+            }
+         } while( page < ( meta.total / meta.limit ) );
+
+         return( factions );
       }
    }
 }
