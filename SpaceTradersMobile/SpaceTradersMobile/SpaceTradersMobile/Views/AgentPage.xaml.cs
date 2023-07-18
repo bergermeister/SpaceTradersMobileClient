@@ -35,6 +35,7 @@
             getAgent( );
             this.TokenEntry.Text = Application.Current.Properties[ "agentToken" ] as string;
          }
+         getFactions( );
       }
 
       protected override void OnDisappearing( )
@@ -61,13 +62,17 @@
 
       private async void getFactions( )
       {
-         var availableFactions = await agentAPI.GetFactions( );
-         if( availableFactions != null )
+         var receivedFactions = await agentAPI.GetFactions( );
+         if( receivedFactions == null )
+         {
+            await DisplayAlert( "ERROR", "Failed to receive Factions.", "Ok" );
+         }
+         else
          {
             this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
             {
                this.factions.Clear( );
-               foreach( var faction in availableFactions )
+               foreach( var faction in receivedFactions )
                {
                   this.factions.Add( faction );
                }
@@ -95,7 +100,7 @@
       private async void updateToken( string token )
       {
          Services.HttpService httpService = DependencyService.Get< Services.HttpService >( );
-         httpService.Client.DefaultRequestHeaders.Authorization =
+         httpService.AuthenticatedClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue( "Bearer", token );
          Application.Current.Properties[ "agentToken" ] = token;
          await Application.Current.SavePropertiesAsync( );

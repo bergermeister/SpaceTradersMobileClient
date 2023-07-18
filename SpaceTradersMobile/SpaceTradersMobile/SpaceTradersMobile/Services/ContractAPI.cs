@@ -17,7 +17,7 @@ namespace SpaceTradersMobile.Services
       public ContractAPI( )
       {
          this.httpService = DependencyService.Get< HttpService >( );
-         this.client = httpService.Client;
+         this.client = httpService.AuthenticatedClient;
       }
 
       public async Task< List< Models.Contract > > GetCurrent( )
