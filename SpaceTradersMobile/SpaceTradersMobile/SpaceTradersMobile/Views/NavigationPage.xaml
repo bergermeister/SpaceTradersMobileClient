@@ -2,14 +2,44 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:tt="clr-namespace:TouchTracking.Forms;assembly=TouchTracking.Forms"
              x:Class="SpaceTradersMobile.Views.NavigationPage">
    <Grid>
       <Grid.RowDefinitions>
          <RowDefinition Height="*"/>
          <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <skia:SKCanvasView Grid.Row="0" x:Name="CanvasView" PaintSurface="CanvasViewPaintSurface" />
-      <Button Grid.Row="1" Clicked="DownloadSystemsClicked" Text="Download Systems" />
+      <Grid Grid.Row="0">
+         <skia:SKCanvasView Grid.Row="0" x:Name="CanvasView" PaintSurface="CanvasViewPaintSurface" Touch="CanvasViewTouch" EnableTouchEvents="True"/>
+         <StackLayout x:Name="UniverseCoordinateEntry" Orientation="Horizontal" VerticalOptions="End">
+            <StackLayout Orientation="Vertical">
+               <StackLayout Orientation="Horizontal">
+                  <StackLayout Orientation="Vertical">
+                     <Label Text="X" HorizontalOptions="Center"/>
+                     <Entry Text="{Binding X}" />
+                  </StackLayout>
+                  <StackLayout Orientation="Vertical" >
+                     <Label Text="Y" HorizontalOptions="Center" />
+                     <Entry Text="{Binding Y}" />
+                  </StackLayout>
+                  <StackLayout Orientation="Vertical">
+                     <Label Text="Radius" HorizontalOptions="Center" />
+                     <Entry Text="{Binding Radius}" />
+                  </StackLayout>
+               </StackLayout>
+               <Button Clicked="ViewCoordinatesClicked" Text="View Coordinates"/>
+            </StackLayout>
+         </StackLayout>
+         <!--
+         <Grid.Effects>
+            <tt:TouchEffect Capture="True" TouchAction="OnTouchEffectAction"/>
+         </Grid.Effects>
+         -->
+      </Grid>
+      <StackLayout Grid.Row ="1" Orientation="Horizontal">
+         <Button Clicked="HeadquartersClicked" Text="Headquarters" />
+         <Button Clicked="DownloadSystemsClicked" Text="Download Systems" />
+      </StackLayout>
    </Grid>
 
 </ContentPage>

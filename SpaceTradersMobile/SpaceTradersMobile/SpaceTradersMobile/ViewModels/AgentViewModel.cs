@@ -1,10 +1,6 @@
 ﻿namespace SpaceTradersMobile.ViewModels
 {
-   using System;
-   using System.Collections.Generic;
-   using System.Text;
-
-   internal class AgentViewModel : DataStoreBaseViewModel
+   internal class AgentViewModel : BaseViewModel
    {
       private Models.Agent agent;
 

@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -16,26 +15,30 @@ namespace SpaceTradersMobile.Views
    [XamlCompilation( XamlCompilationOptions.Compile )]
    public partial class NavigationPage : ContentPage
    {
-      private Services.AgentAPI agentAPI = DependencyService.Get< Services.AgentAPI >( );
-      private Services.Navigation navigation = DependencyService.Get< Services.Navigation >( );
-      private List< Models.Waypoint > waypoints = null;
-      private long systemWidth;
-      private long systemHeight;
-
-      private long x { get; set; }
-      private long y { get; set; }
+      private Services.AgentAPI agentAPI;
+      private Services.Navigation navigation;
+      private ViewModels.UniverseViewModel universeVM;
+      private ViewModels.SystemViewModel systemVM;
+      private SKMatrix matrix;
+      private Dictionary< long, SKPoint > touchDictionary;
 
       public NavigationPage( )
       {
          InitializeComponent( );
+
+         this.agentAPI = DependencyService.Get< Services.AgentAPI >( );
+         this.navigation = DependencyService.Get< Services.Navigation >( );
+         this.universeVM = new ViewModels.UniverseViewModel( );
+         this.systemVM = new ViewModels.SystemViewModel(  );
+         this.UniverseCoordinateEntry.BindingContext = this.universeVM;
+         this.matrix = SKMatrix.CreateIdentity( );
+         this.touchDictionary = new Dictionary< long, SKPoint >( );
       }
 
       protected override void OnAppearing( )
       {
-         if( Application.Current.Properties.ContainsKey( "agentToken" ) )
-         {
-            findAgentHeadquarters( );
-         }
+         /// @todo select universeVM or systemVM
+         this.universeVM.ReloadSystems( );
       }
 
       protected override void OnDisappearing( )
@@ -48,67 +51,125 @@ namespace SpaceTradersMobile.Views
          SKImageInfo info = eventArgs.Info;
          SKSurface surface = eventArgs.Surface;
          SKCanvas canvas = surface.Canvas;
-
          canvas.Clear( );
+         canvas.SetMatrix( matrix );
+         /// @todo Switch between universeVM and systemVM draw methods
+         this.universeVM.Draw( info, surface, canvas );      
+         canvas.Flush( );
+      }
 
-         // Define colors
-         SKPaint gridPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.White.ToSKColor( ),
-            StrokeWidth = 1
-         };
-         SKPaint orbitPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.Blue.ToSKColor( ),
-            StrokeWidth = 1
-         };
-         SKPaint waypointPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.Red.ToSKColor( ),
-            StrokeWidth = 3
-         };
-         SKPaint textPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.Yellow.ToSKColor( ),
-            StrokeWidth = 1
-         };
+      private void CanvasViewTouch( object sender, SKTouchEventArgs args )
+      {
+         //TouchTrackingPoint point = args.Location;
+         SKPoint point = args.Location;
 
-         // Draw the Grid
-         for( var i = 0; i < info.Width; i += ( info.Width / 10 ) )
+         //switch( args.Type )
+         switch( args.ActionType )
          {
-            canvas.DrawLine( i, 0, i, info.Height, gridPaint );
-         }
-         for( var i = 0; i < info.Height; i += ( info.Width / 10 ) )
-         {
-            canvas.DrawLine( 0, i, info.Width, i, gridPaint );
-         }
-         for( var i = 1; i < info.Width; i += ( info.Width / 10 ) )
-         {
-            canvas.DrawCircle( info.Width / 2, info.Height / 2, i, orbitPaint );
-         }
-
-         // Draw waypoints
-         if( this.waypoints != null )
-         {
-            foreach( var waypoint in this.waypoints )
+            //case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
             {
-               long centerX = ( ( waypoint.x + ( systemWidth / 2 ) ) * info.Width ) / systemWidth;
-               long centerY = ( ( waypoint.y + ( systemHeight / 2 ) ) * info.Height ) / systemHeight;
-               canvas.DrawCircle( centerX, centerY, 10, waypointPaint );
-               canvas.DrawText( waypoint.type, centerX - 15, centerY + 15, textPaint );
+               // Find transformed canvasview rectangle
+               //SKRect rect = new SKRect( 0, 0, ( float )CanvasView.Width, ( float )CanvasView.Height );
+               SKRect rect = new SKRect( point.X - 10, point.Y - 10, point.X + 10, point.Y + 10 );
+               rect = matrix.Invert( ).MapRect( rect );
+
+               bool systemClicked = false;
+               /*
+               foreach( var system in this.universeVM.VisibleSystems )
+               {
+                  if( rect.Contains( system.x, system.y ) )
+                  {
+                     systemClicked = true;
+                     break;
+                  }
+               }
+               */
+               // Determine if the touch was within that rectangle
+               if( !systemClicked && !touchDictionary.ContainsKey( args.Id ) ) // && rect.Contains( skPoint ) )
+               {
+                  touchDictionary.Add( args.Id, point );
+               }
+               break;
+            }
+            //case TouchActionType.Moved:
+            case SKTouchAction.Moved:
+            {
+               if( touchDictionary.ContainsKey( args.Id ) )
+               {
+                  if( touchDictionary.Count == 1 )
+                  {
+                     SKPoint prevPoint = touchDictionary[ args.Id ];
+                     touchDictionary[ args.Id ] = point;
+                     matrix.TransX += point.X - prevPoint.X;
+                     matrix.TransY += point.Y - prevPoint.Y;                     
+                     CanvasView.InvalidateSurface( );
+                  }
+                  else if( touchDictionary.Count >= 2 )
+                  {
+                     // Copy two dictionary keys into array
+                     long[ ] keys = new long[ touchDictionary.Count ];
+                     touchDictionary.Keys.CopyTo( keys, 0 );
+
+                     // Find index of non-moving (pivot) finger
+                     int pivotIndex = ( keys[ 0 ] == args.Id ) ? 1 : 0;
+
+                     // Get the three points involved in the transform
+                     SKPoint pivotPoint = touchDictionary[ keys[ pivotIndex ] ];
+                     SKPoint prevPoint = touchDictionary[ args.Id ];
+                     SKPoint newPoint = point;
+
+                     // Calculate two vectors
+                     SKPoint oldVector = prevPoint - pivotPoint;
+                     SKPoint newVector = newPoint - pivotPoint;
+
+                     // Scaling factors are ratios of the vectors
+                     float scaleX = newVector.X / oldVector.X;
+                     float scaleY = newVector.Y / oldVector.Y;
+
+                     if( !float.IsNaN( scaleX ) && !float.IsInfinity( scaleX ) &&
+                         !float.IsNaN( scaleY ) && !float.IsInfinity( scaleY ) )
+                     {
+                        // If something bad hasn't happened, calculate a scale and translation matrix
+                        SKMatrix scaleMatrix = SKMatrix.CreateScale( scaleX, scaleY, pivotPoint.X, pivotPoint.Y );
+                        matrix.PostConcat( scaleMatrix ); //SKMatrix.PostConcat( ref matrix, scaleMatrix );
+                        CanvasView.InvalidateSurface( );
+                     }
+                  }
+               }
+               break;
+            }
+            case SKTouchAction.Released: // Fall through
+            case SKTouchAction.Cancelled:
+            {
+               touchDictionary.Remove( args.Id );
+               break;
             }
          }
+      }
 
-         canvas.Flush( );
+      private void ViewCoordinatesClicked( object sender, EventArgs e )
+      {
+         this.universeCoordinatesChanged( );
+      }
+
+      private void HeadquartersClicked( object sender, EventArgs e )
+      {
+         if( Application.Current.Properties.ContainsKey( "agentToken" ) )
+         {
+            findAgentHeadquarters( );
+         }
       }
 
       private void DownloadSystemsClicked( object sender, EventArgs e )
       {
          navigation.DownloadSystems( );
+      }
+
+      private async void universeCoordinatesChanged( )
+      {
+         await this.universeVM.ReloadSystems( );
+         this.CanvasView.InvalidateSurface( );
       }
 
       private async void findAgentHeadquarters( )
@@ -136,12 +197,12 @@ namespace SpaceTradersMobile.Views
                   // During draw routine, scale the distances accordingly
                }
 
-               systemWidth = maxCoord * 3;
-               systemHeight = maxCoord * 3; 
+               //systemWidth = maxCoord * 3;
+               //systemHeight = maxCoord * 3; 
 
                this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
                {
-                  this.waypoints = systemWaypoints;
+                  //this.waypoints = systemWaypoints;
                   this.CanvasView.InvalidateSurface( );
                } );
             }

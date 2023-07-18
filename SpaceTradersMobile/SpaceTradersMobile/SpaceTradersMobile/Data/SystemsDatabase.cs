@@ -24,7 +24,7 @@ namespace SpaceTradersMobile.Data
       public Task< List< Models.System > > GetSystemRangeAsync( long x1, long y1, long x2, long y2 )
       {
          return( database.Table< Models.System >( )
-            .Where( s => ( ( s.x <= x1 ) && ( s.x >= x2 ) && ( s.y <= y1 ) && ( s.y >= y2 ) ) )
+            .Where( s => ( ( s.x >= x1 ) && ( s.x <= x2 ) && ( s.y >= y1 ) && ( s.y <= y2 ) ) )
             .ToListAsync( ) );
       }
 
