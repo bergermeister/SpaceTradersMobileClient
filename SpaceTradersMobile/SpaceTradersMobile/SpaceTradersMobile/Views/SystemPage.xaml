@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             x:Class="SpaceTradersMobile.Views.SystemPage"
+             Title="{Binding Title}">
+   <Grid>
+      <Grid.RowDefinitions>
+         <RowDefinition Height="*"/>
+         <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Grid Grid.Row="0">
+         <skia:SKCanvasView Grid.Row="0" x:Name="CanvasView" PaintSurface="CanvasViewPaintSurface" Touch="CanvasViewTouch" EnableTouchEvents="True"/>
+      </Grid>
+      <StackLayout Grid.Row ="1" Orientation="Horizontal">
+         <Button Text="Placeholder 0" />
+         <Button Text="Placeholder 1" />
+      </StackLayout>
+   </Grid>
+</ContentPage>

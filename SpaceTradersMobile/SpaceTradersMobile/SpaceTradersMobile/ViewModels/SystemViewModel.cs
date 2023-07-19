@@ -1,49 +1,83 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
+using SpaceTradersMobile.Models;
 using Xamarin.Forms;
 
 namespace SpaceTradersMobile.ViewModels
 {
+   [QueryProperty( nameof( Symbol ), nameof( Symbol ) )]
    public class SystemViewModel : BaseViewModel
    {
+      private string symbol;
       private Models.System system;
       private Services.Navigation navigation;
+      private SKMatrix matrix;
+      private Dictionary< long, SKPoint > touchDictionary;
+      private Dictionary< string, SKPaint > paint;
+      private Dictionary< string, long > size;
 
       public SystemViewModel( )
       {
          this.Title = "Unknown System";
-         this.system = null;
+         this.system = new Models.System( )
+         {
+            symbol = "Unknown"
+         };
          this.navigation = DependencyService.Get< Services.Navigation >( );
+         this.matrix = SKMatrix.CreateIdentity( );
+         this.touchDictionary = new Dictionary<long, SKPoint>( );
+         this.paint = new Dictionary<string, SKPaint>
+         {
+            { "PLANET",          new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.Green.ToSKColor( ), StrokeWidth = 1 } },
+            { "JUMP_GATE",       new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.Purple.ToSKColor( ), StrokeWidth = 1 } },
+            { "GAS_GIANT",       new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.Brown.ToSKColor( ), StrokeWidth = 1 } },
+            { "ORBITAL_STATION", new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.White.ToSKColor( ), StrokeWidth = 1 } },
+            { "ASTEROID_FIELD",  new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.DarkGray.ToSKColor( ), StrokeWidth = 1 } },
+            { "MOON",            new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.GhostWhite.ToSKColor( ), StrokeWidth = 1 } }
+         };
+
+         this.size = new Dictionary<string, long>
+         {
+            { "PLANET",          10 },
+            { "JUMP_GATE",       10 },
+            { "GAS_GIANT",       10 },
+            { "ORBITAL_STATION", 10 },
+            { "ASTEROID_FIELD",  10 },
+            { "MOON",            10 }
+         };
       }
 
-      public void CanvasViewPaintSurface( object sender, SKPaintSurfaceEventArgs eventArgs )
+      public string Symbol
       {
-         SKImageInfo info = eventArgs.Info;
-         SKSurface surface = eventArgs.Surface;
-         SKCanvas canvas = surface.Canvas;
-         Dictionary< SKPoint, long > overlap = new Dictionary< SKPoint, long >( );
-         SKPoint point = new SKPoint( );
+         get
+         {
+            return( symbol );
+         }
+         set
+         {
+            this.symbol = value;
+            this.Title = value;
+            LoadSystem( value );  
+         }
+      }
+
+      public void Draw( SKCanvas canvas )
+      {
          canvas.Clear( );
+         canvas.SetMatrix( matrix );
+
+         SKRect clipBox;
+         clipBox = new SKRect( 0, 0, ( float )canvas.LocalClipBounds.Width, ( float )canvas.LocalClipBounds.Height );
+         clipBox = canvas.TotalMatrix.Invert( ).MapRect( clipBox );
 
          // Define colors
          SKPaint gridPaint = new SKPaint
          {
             Style = SKPaintStyle.Stroke,
-            Color = Color.White.ToSKColor( ),
+            Color = Color.Gray.ToSKColor( ),
             StrokeWidth = 1
-         };
-         SKPaint orbitPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.Blue.ToSKColor( ),
-            StrokeWidth = 1
-         };
-         SKPaint waypointPaint = new SKPaint
-         {
-            Style = SKPaintStyle.Stroke,
-            Color = Color.Red.ToSKColor( ),
-            StrokeWidth = 3
          };
          SKPaint textPaint = new SKPaint
          {
@@ -53,9 +87,9 @@ namespace SpaceTradersMobile.ViewModels
          };
 
          // Draw the Grid
-         for( var i = 1; i < info.Width; i += ( info.Width / 10 ) )
+         for( var i = 1; i < clipBox.Width; i += ( int )( clipBox.Width / 10 ) )
          {
-            canvas.DrawCircle( info.Width / 2, info.Height / 2, i, orbitPaint );
+            canvas.DrawCircle( clipBox.Width / 2, clipBox.Height / 2, i, gridPaint );
          }
 
          if( this.system == null )
@@ -73,56 +107,111 @@ namespace SpaceTradersMobile.ViewModels
             {
                foreach( var waypoint in this.system.waypoints )
                {
-                  /*
-                  point.X = ( ( waypoint.x + ( systemWidth / 2 ) ) * info.Width ) / systemWidth;
-                  point.Y = ( ( waypoint.y + ( systemHeight / 2 ) ) * info.Height ) / systemHeight;
-                  if( !overlap.ContainsKey( point ) )
+                  if( clipBox.Contains( waypoint.x, waypoint.y ) )
                   {
-                     overlap.Add( point, 0 );
+                     canvas.DrawCircle( waypoint.x, waypoint.y, size[ waypoint.type ], paint[ waypoint.type ] );
+                     canvas.DrawText( waypoint.symbol, waypoint.x - 15, waypoint.y + 20, textPaint );
+                     canvas.DrawText( string.Format( "({0},{1})", waypoint.x, waypoint.y ), waypoint.x - 15, waypoint.y + 40, textPaint );
                   }
-                  overlap[ point ]++;
-
-                  switch( waypoint.type )
-                  {
-                     case "PLANET":
-                     {
-                        break;
-                     }
-                     case "JUMP_GATE":
-                     {
-                        break;
-                     }
-                     case "GAS_GIANT":
-                     {
-                        break;
-                     }
-                     case "ORBITAL_STATION":
-                     {
-                        break;
-                     }
-                     case "ASTEROID_FIELD":
-                     {
-                        break;
-                     }
-                     case "MOON":
-                     {
-                        break;
-                     }
-                     default:
-                        break;
-                  }
-                  canvas.DrawCircle( point, 10, waypointPaint );
-
-                  canvas.DrawText(
-                     waypoint.type,
-                     point.X - 15,
-                     point.Y + ( 20 * overlap[ point ] ), textPaint );
-                  */
                }
             }
          }
 
          canvas.Flush( );
-      }   
+      }
+
+      public void Touch( SKCanvasView canvasView, SKTouchEventArgs args )
+      {
+         SKPoint point = args.Location;
+
+         switch( args.ActionType )
+         {
+            case SKTouchAction.Pressed:
+            {
+               // Find transformed canvasview rectangle
+               SKRect rect = new SKRect( point.X - 10, point.Y - 10, point.X + 10, point.Y + 10 );
+               rect = matrix.Invert( ).MapRect( rect );
+
+               bool systemClicked = false;
+               /*
+               foreach( var system in this.VisibleSystems )
+               {
+                  if( rect.Contains( system.x, system.y ) )
+                  {
+                     Debug.WriteLine( string.Format( "Click system: {0}", system.symbol ) );
+                     systemClicked = true;
+
+                     break;
+                  }
+               }
+               */
+
+               // Determine if the touch was within that rectangle
+               if( !systemClicked && !touchDictionary.ContainsKey( args.Id ) )
+               {
+                  touchDictionary.Add( args.Id, point );
+               }
+               break;
+            }
+            case SKTouchAction.Moved:
+            {
+               if( touchDictionary.ContainsKey( args.Id ) )
+               {
+                  if( touchDictionary.Count == 1 )
+                  {
+                     SKPoint prevPoint = touchDictionary[ args.Id ];
+                     touchDictionary[ args.Id ] = point;
+                     matrix.TransX += point.X - prevPoint.X;
+                     matrix.TransY += point.Y - prevPoint.Y;
+                     canvasView.InvalidateSurface( );
+                  }
+                  else if( touchDictionary.Count >= 2 )
+                  {
+                     // Copy two dictionary keys into array
+                     long[ ] keys = new long[ touchDictionary.Count ];
+                     touchDictionary.Keys.CopyTo( keys, 0 );
+
+                     // Find index of non-moving (pivot) finger
+                     int pivotIndex = ( keys[ 0 ] == args.Id ) ? 1 : 0;
+
+                     // Get the three points involved in the transform
+                     SKPoint pivotPoint = touchDictionary[ keys[ pivotIndex ] ];
+                     SKPoint prevPoint = touchDictionary[ args.Id ];
+                     SKPoint newPoint = point;
+
+                     // Calculate two vectors
+                     SKPoint oldVector = prevPoint - pivotPoint;
+                     SKPoint newVector = newPoint - pivotPoint;
+
+                     // Scaling factors are ratios of the vectors
+                     float scaleX = newVector.X / oldVector.X;
+                     float scaleY = newVector.Y / oldVector.Y;
+
+                     if( !float.IsNaN( scaleX ) && !float.IsInfinity( scaleX ) &&
+                         !float.IsNaN( scaleY ) && !float.IsInfinity( scaleY ) )
+                     {
+                        // If something bad hasn't happened, calculate a scale and translation matrix
+                        SKMatrix scaleMatrix = SKMatrix.CreateScale( scaleX, scaleY, pivotPoint.X, pivotPoint.Y );
+                        matrix.PostConcat( scaleMatrix );
+                        canvasView.InvalidateSurface( );
+                     }
+                  }
+               }
+               break;
+            }
+            case SKTouchAction.Released: // Fall through
+            case SKTouchAction.Cancelled:
+            {
+               touchDictionary.Remove( args.Id );
+               break;
+            }
+         }
+      }
+
+      public async void LoadSystem( string symbol )
+      {
+         this.system = await App.SystemDatabase.GetSystemAsync( symbol );
+         this.system.waypoints = await navigation.GetSystemWaypoints( symbol );
+      }
    }
 }

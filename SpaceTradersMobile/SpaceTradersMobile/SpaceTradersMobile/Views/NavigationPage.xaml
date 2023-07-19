@@ -2,8 +2,8 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
-             xmlns:tt="clr-namespace:TouchTracking.Forms;assembly=TouchTracking.Forms"
-             x:Class="SpaceTradersMobile.Views.NavigationPage">
+             x:Class="SpaceTradersMobile.Views.NavigationPage"
+             Title="{Binding Title}">
    <Grid>
       <Grid.RowDefinitions>
          <RowDefinition Height="*"/>
@@ -22,19 +22,10 @@
                      <Label Text="Y" HorizontalOptions="Center" />
                      <Entry Text="{Binding Y}" />
                   </StackLayout>
-                  <StackLayout Orientation="Vertical">
-                     <Label Text="Radius" HorizontalOptions="Center" />
-                     <Entry Text="{Binding Radius}" />
-                  </StackLayout>
                </StackLayout>
                <Button Clicked="ViewCoordinatesClicked" Text="View Coordinates"/>
             </StackLayout>
          </StackLayout>
-         <!--
-         <Grid.Effects>
-            <tt:TouchEffect Capture="True" TouchAction="OnTouchEffectAction"/>
-         </Grid.Effects>
-         -->
       </Grid>
       <StackLayout Grid.Row ="1" Orientation="Horizontal">
          <Button Clicked="HeadquartersClicked" Text="Headquarters" />
