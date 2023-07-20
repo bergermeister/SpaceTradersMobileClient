@@ -54,10 +54,7 @@ namespace SpaceTradersMobile.Views
 
       private void HeadquartersClicked( object sender, EventArgs e )
       {
-         if( Application.Current.Properties.ContainsKey( "agentToken" ) )
-         {
-            findAgentHeadquarters( );
-         }
+         this.universeVM.NavigateToAgentHeadquarters( this.CanvasView );
       }
 
       private void DownloadSystemsClicked( object sender, EventArgs e )
@@ -101,7 +98,7 @@ namespace SpaceTradersMobile.Views
 
                this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
                {
-                  //this.waypoints = systemWaypoints;
+                  
                   this.CanvasView.InvalidateSurface( );
                } );
             }

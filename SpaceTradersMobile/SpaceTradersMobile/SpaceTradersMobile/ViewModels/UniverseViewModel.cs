@@ -7,6 +7,7 @@ using System.Xml.Schema;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using SpaceTradersMobile.Models;
+using SpaceTradersMobile.Services;
 using SpaceTradersMobile.Views;
 using Xamarin.Forms;
 using Xamarin.Forms.Shapes;
@@ -15,6 +16,7 @@ namespace SpaceTradersMobile.ViewModels
 {
    public class UniverseViewModel : BaseViewModel
    {
+      private Services.AgentAPI agentAPI;
       private List< Models.System > systems;
       private List< Models.System > visibleSystems;
       private double x;
@@ -27,6 +29,7 @@ namespace SpaceTradersMobile.ViewModels
       public UniverseViewModel( )
       {
          this.ReloadSystems( );
+         this.agentAPI = DependencyService.Get<Services.AgentAPI>( );
          this.visibleSystems = new List<Models.System>( );
          this.Title = "Universe";
          this.x = 0;
@@ -231,6 +234,39 @@ namespace SpaceTradersMobile.ViewModels
             {
                touchDictionary.Remove( args.Id );
                break;
+            }
+         }
+
+         args.Handled = true;
+      }
+
+      public async void NavigateToAgentHeadquarters( SKCanvasView canvasView )
+      {
+         if( !Application.Current.Properties.ContainsKey( "agentToken" ) )
+         {
+         }
+         else
+         {
+            Models.Agent agent = await agentAPI.GetCurrent( );
+            if( agent == null )
+            {
+
+            }
+            else
+            {
+               string[ ] parsedWaypoint = agent.headquarters.Split( new char[ ]{ '-' } );
+               string systemSymbol = parsedWaypoint[ 0 ] + '-' + parsedWaypoint[ 1 ];
+               Models.System system = await App.SystemDatabase.GetSystemAsync( systemSymbol );
+               if( system == null )
+               {
+                  /// @todo Error
+               }
+               else
+               {
+                  this.matrix.TransX = -( float )( ( double )system.x - ( canvasView.Width / 2 ) );
+                  this.matrix.TransY = -( float )( ( double )system.y - ( canvasView.Height / 2 ) );
+                  canvasView.InvalidateSurface( );
+               }
             }
          }
       }
