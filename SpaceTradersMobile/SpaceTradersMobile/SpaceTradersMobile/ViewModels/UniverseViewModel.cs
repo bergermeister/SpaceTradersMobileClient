@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Schema;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
-using SpaceTradersMobile.Models;
-using SpaceTradersMobile.Services;
 using SpaceTradersMobile.Views;
 using Xamarin.Forms;
-using Xamarin.Forms.Shapes;
 
 namespace SpaceTradersMobile.ViewModels
 {

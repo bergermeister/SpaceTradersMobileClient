@@ -29,10 +29,11 @@
         </ResourceDictionary>
     </Shell.Resources>
 
-    <TabBar>
-        <ShellContent Title="About" Icon="icon_about.png" Route="AboutPage" ContentTemplate="{DataTemplate local:AboutPage}" />
-        <ShellContent Title="Navigation" Icon="icon_feed.png" ContentTemplate="{DataTemplate local:NavigationPage}" />
-        <ShellContent Title="Agent" Icon="icon_feed.png" ContentTemplate="{DataTemplate local:AgentPage}" />
+   <TabBar>
+      <ShellContent Title="About" Icon="icon_about.png" Route="AboutPage" ContentTemplate="{DataTemplate local:AboutPage}" />
+      <ShellContent Title="Navigation" Icon="icon_feed.png" ContentTemplate="{DataTemplate local:NavigationPage}" />
+      <ShellContent Title="Contracts" Icon="icon_feed.png" ContentTemplate="{DataTemplate local:ContractsPage}" />
+      <ShellContent Title="Agent" Icon="icon_feed.png" ContentTemplate="{DataTemplate local:AgentPage}" />
    </TabBar>
 
     <!--

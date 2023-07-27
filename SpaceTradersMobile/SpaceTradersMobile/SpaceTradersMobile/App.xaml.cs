@@ -34,7 +34,6 @@
          DependencyService.Register< TokenDataStore >( );
          DependencyService.Register< HttpService >( );
          DependencyService.Register< AgentAPI >( );
-         DependencyService.Register< ContractAPI >( );
          DependencyService.Register< Navigation >( );
          Application.Current.UserAppTheme = OSAppTheme.Dark;
          if( Application.Current.Properties.ContainsKey( "agentToken" ) )

@@ -1,17 +1,91 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:local="clr-namespace:SpaceTradersMobile.ViewModels"        
+             xmlns:model="clr-namespace:SpaceTradersMobile.Models" 
              x:Class="SpaceTradersMobile.Views.SystemPage"
              Title="{Binding Title}">
+   <ContentPage.Resources>
+      <ResourceDictionary>
+         <xct:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+      </ResourceDictionary>
+   </ContentPage.Resources>
+   <ContentPage.ToolbarItems>
+      <ToolbarItem Text="List View" Command="{Binding ListViewCommand}" />
+   </ContentPage.ToolbarItems>
    <Grid>
       <Grid.RowDefinitions>
          <RowDefinition Height="*"/>
          <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <Grid Grid.Row="0">
-         <skia:SKCanvasView Grid.Row="0" x:Name="CanvasView" PaintSurface="CanvasViewPaintSurface" Touch="CanvasViewTouch" EnableTouchEvents="True"/>
-      </Grid>
+      <skia:SKCanvasView 
+         Grid.Row="0" 
+         x:Name="CanvasView" 
+         PaintSurface="CanvasViewPaintSurface" 
+         Touch="CanvasViewTouch" 
+         EnableTouchEvents="True"
+         IsVisible="{Binding ListView,Converter={StaticResource InvertedBoolConverter}}"/>
+      <RefreshView 
+         Grid.Row="0"
+         x:DataType="local:SystemViewModel" 
+         Command="{Binding LoadWaypointsCommand}" 
+         IsRefreshing="{Binding IsBusy, Mode=TwoWay}"
+         IsVisible="{Binding ListView}">
+         <CollectionView
+            x:Name="WaypointsListView"
+            ItemsSource="{Binding Waypoints}"
+            SelectionMode="None">
+            <CollectionView.ItemTemplate>
+               <DataTemplate>
+                  <StackLayout Padding="10" x:DataType="local:WaypointViewModel">
+                     <Label 
+                        Text="{Binding Symbol}"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemTextStyle}"
+                        FontSize="16"/>
+                     <Label
+                        Text="{Binding Type}"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13"/>
+                     <CollectionView
+                        x:Name="TraitsListView" 
+                        ItemsSource="{Binding Traits}"
+                        SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                           <DataTemplate>
+                              <StackLayout Padding="0" x:DataType="model:Trait" VerticalOptions="Start">
+                                 <Label
+                                    Text="{Binding name}"
+                                    LineBreakMode="NoWrap"
+                                    Style="{DynamicResource ListItemDetailTextStyle}"
+                                    FontSize="13"/>
+                                 <Label
+                                    Text="{Binding description}"
+                                    LineBreakMode="WordWrap"
+                                    Style="{DynamicResource ListItemDetailTextStyle}"
+                                    FontSize="13"/>
+                              </StackLayout>
+                           </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                     </CollectionView>
+                     <!--
+                     <StackLayout.GestureRecognizers>
+                        <TapGestureRecognizer
+                           NumberOfTapsRequired="1"
+                           Command="{Binding Source={RelativeSource AncestorType={x:Type local:SystemViewModel}},Path=WaypointTapped}"
+                           CommandParameter="{Binding .}">
+                        </TapGestureRecognizer>
+                     </StackLayout.GestureRecognizers>
+                     -->
+                  </StackLayout>
+               </DataTemplate>
+            </CollectionView.ItemTemplate>
+         </CollectionView>
+      </RefreshView>
+      
       <StackLayout Grid.Row ="1" Orientation="Horizontal">
          <Button Text="Placeholder 0" />
          <Button Text="Placeholder 1" />

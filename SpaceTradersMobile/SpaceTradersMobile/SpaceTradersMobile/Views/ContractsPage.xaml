@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             x:Class="SpaceTradersMobile.Views.ContractsPage"
+             Title="{Binding Title}"
+             xmlns:local="clr-namespace:SpaceTradersMobile.ViewModels"  
+             xmlns:model="clr-namespace:SpaceTradersMobile.Models">
+   <ContentPage.Resources>
+      <ResourceDictionary>
+         <xct:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+      </ResourceDictionary>
+   </ContentPage.Resources>
+   <RefreshView 
+      x:DataType="local:ContractsViewModel" 
+      Command="{Binding LoadContractsCommand}" 
+      IsRefreshing="{Binding IsBusy, Mode=TwoWay}">
+      <CollectionView x:Name="ContractsListView"
+                ItemsSource="{Binding Contracts}"
+                SelectionMode="None">
+         <CollectionView.ItemTemplate>
+            <DataTemplate>
+               <StackLayout Padding="10" x:DataType="model:Contract">
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="ID:" 
+                        LineBreakMode="NoWrap" 
+                        Style="{DynamicResource ListItemTextStyle}" 
+                        FontSize="16" />
+                     <Label Text="{Binding id}" 
+                        LineBreakMode="NoWrap" 
+                        Style="{DynamicResource ListItemTextStyle}" 
+                        FontSize="16" />
+                  </StackLayout>
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="{Binding factionSymbol}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding type}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Expiration:"                         
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding expiration}"                  
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  <!--
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Deadline To Accept:" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding deadlineToAccept}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  -->
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Deadline:" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding terms.deadline}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Payment On Accepted:"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding terms.payment.onAccepted}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Payment On Fulfilled:"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                     <Label Text="{Binding terms.payment.onFulfilled}" 
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13" />
+                  </StackLayout>
+                  <StackLayout Orientation="Horizontal">
+                     <Label Text="Accepted"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13"
+                        IsVisible="{Binding accepted}"/>
+                     <Label Text="Available"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13"
+                        IsVisible="{Binding accepted,Converter={StaticResource InvertedBoolConverter}}"/>
+                  </StackLayout>
+                  <StackLayout.GestureRecognizers>
+                     <TapGestureRecognizer 
+                        NumberOfTapsRequired="1"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type local:ContractsViewModel}}, Path=ContractTapped}"		
+                        CommandParameter="{Binding .}">
+                     </TapGestureRecognizer>
+                  </StackLayout.GestureRecognizers>
+               </StackLayout>
+            </DataTemplate>
+         </CollectionView.ItemTemplate>
+      </CollectionView>
+   </RefreshView>
+</ContentPage>

@@ -29,7 +29,8 @@ namespace SpaceTradersMobile.Services
       public async Task< KeyValuePair< string, Models.Agent > > Register( string callSign, string requestedFaction )
       {
          const string uri = "register";
-         KeyValuePair< string, Models.Agent > agentToken;
+         string token = string.Empty;
+         Models.Agent agent = null;
          StringContent jsonContent = new StringContent(
             JsonConvert.SerializeObject( new
             {
@@ -51,14 +52,13 @@ namespace SpaceTradersMobile.Services
             {
                string jsonString = await reader.ReadToEndAsync( );
                JObject jsonObject = JObject.Parse( jsonString );
-               agentToken = new KeyValuePair< string, Models.Agent >(
-                  jsonObject[ "data" ][ "token" ].ToString( ),
-                  jsonObject[ "data" ][ "agent" ].ToObject< Models.Agent >( ) );
+               token = jsonObject[ "data" ][ "token" ].ToString( );
+               agent = jsonObject[ "data" ][ "agent" ].ToObject<Models.Agent>( );
             }
 
             this.authClient.DefaultRequestHeaders.Authorization =
-               new AuthenticationHeaderValue( "Bearer", agentToken.Key );
-            Application.Current.Properties[ "agentToken" ] = agentToken.Key;
+               new AuthenticationHeaderValue( "Bearer", token );
+            Application.Current.Properties[ "agentToken" ] = token;
             await Application.Current.SavePropertiesAsync( );
          }
          else
@@ -74,7 +74,7 @@ namespace SpaceTradersMobile.Services
             }
          }
 
-         return( agentToken );
+         return ( new KeyValuePair<string, Models.Agent>( token, agent ) );
       }
 
       public async Task< Models.Agent > GetCurrent( )
@@ -145,6 +145,95 @@ namespace SpaceTradersMobile.Services
          } while( page < ( meta.total / meta.limit ) );
 
          return( factions );
+      }
+   
+      public async Task< List< Models.Contract > > GetContracts( )
+      {
+         string requestUri;
+         List< Models.Contract > contracts = null;
+         Models.Meta meta = new Models.Meta( )
+         {
+            total = 10,
+            limit = 10,
+            page = 1
+         };
+         long page = 1;
+
+         do
+         {
+            requestUri = String.Format( "my/contracts?limit={0}&page={1}", meta.limit, page );
+
+            // Get the response.
+            HttpResponseMessage response = await this.authClient.GetAsync( requestUri );
+
+            if( response.StatusCode == System.Net.HttpStatusCode.OK )
+            {
+               // Get the response content.
+               HttpContent responseContent = response.Content;
+
+               // Get the stream of the content.
+               using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+               {
+                  string jsonString = await reader.ReadToEndAsync( );
+                  JObject jsonObject = JObject.Parse( jsonString );
+                  contracts = jsonObject[ "data" ].ToObject<List<Models.Contract>>( );
+               }
+
+               page++;
+               Thread.Sleep( 100 );
+            }
+            else
+            {
+               break;
+            }
+         } while( page < ( meta.total / meta.limit ) );
+
+         return( contracts );
+      }
+
+      public async Task< Models.Contract > GetContract( string contractId )
+      {
+         string requestUri = string.Format( "my/contracts/{0}", contractId );
+         Models.Contract contract = null;
+         HttpResponseMessage response = await this.authClient.GetAsync( requestUri );
+         if( response.StatusCode == System.Net.HttpStatusCode.OK )
+         {
+            // Get the response content.
+            HttpContent responseContent = response.Content;
+
+            // Get the stream of the content.
+            using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+            {
+               string jsonString = await reader.ReadToEndAsync( );
+               JObject jsonObject = JObject.Parse( jsonString );
+               contract = jsonObject[ "data" ].ToObject<Models.Contract>( );
+            }
+         }
+         return ( contract );
+      }
+
+      public async Task<Models.Contract> AcceptContract( string contractId )
+      {
+         string requestUri = String.Format( "my/contracts/{0}/accept", contractId );
+         Models.Contract contract = null;
+
+         HttpResponseMessage response = await this.authClient.PostAsync( requestUri, null );
+
+         if( response.StatusCode == System.Net.HttpStatusCode.OK )
+         {
+            // Get the response content.
+            HttpContent responseContent = response.Content;
+
+            // Get the stream of the content.
+            using( var reader = new StreamReader( await responseContent.ReadAsStreamAsync( ) ) )
+            {
+               string jsonString = await reader.ReadToEndAsync( );
+               JObject jsonObject = JObject.Parse( jsonString );
+               contract = jsonObject[ "data" ][ "contract" ].ToObject<Models.Contract>( );
+            }
+         }
+
+         return ( contract );
       }
    }
 }

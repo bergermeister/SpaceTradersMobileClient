@@ -14,6 +14,7 @@ namespace SpaceTradersMobile
          Routing.RegisterRoute( nameof( ItemDetailPage ), typeof( ItemDetailPage ) );
          Routing.RegisterRoute( nameof( NewItemPage ), typeof( NewItemPage ) );
          Routing.RegisterRoute( nameof( SystemPage ), typeof( SystemPage ) );
+         Routing.RegisterRoute( nameof( ContractDetailsPage ), typeof( ContractDetailsPage ) );
       }
 
    }

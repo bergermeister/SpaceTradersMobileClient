@@ -4,6 +4,7 @@
    using Newtonsoft.Json.Linq;
    using System;
    using System.Collections.Generic;
+   using System.Diagnostics;
    using System.IO;
    using System.Net.Http;
    using System.Net.Http.Headers;
@@ -93,6 +94,10 @@
                JObject jsonObject = JObject.Parse( jsonString );
                waypoint = jsonObject[ "data" ].ToObject< Models.Waypoint >( );
             }
+         }
+         else
+         {
+            Debug.WriteLine( string.Format( "{0}:{1}", response.StatusCode, response.ReasonPhrase ) );
          }
 
          return ( waypoint );

@@ -12,7 +12,6 @@
    {
       private ViewModels.AgentViewModel accountViewModel;
       private Services.AgentAPI agentAPI = DependencyService.Get< Services.AgentAPI >( );
-      private Services.ContractAPI contractAPI = DependencyService.Get< Services.ContractAPI >( );
       private Services.Navigation waypointAPI = DependencyService.Get< Services.Navigation >( );
       private ObservableCollection< Models.Faction > factions;
 
@@ -135,38 +134,6 @@
             else
             {
                Debug.WriteLine( "Waypoints is null" );
-            }
-         } );
-      }
-
-      private async void getContracts( )
-      {
-         var contracts = await contractAPI.GetCurrent( );
-         this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
-         {
-            if( contracts != null )
-            {
-               Debug.WriteLine( JsonConvert.SerializeObject( contracts ) );
-            }
-            else
-            {
-               Debug.WriteLine( "Contracts is null" );
-            }
-         } );
-      }
-
-      private async void acceptContract( )
-      {
-         var contract = await contractAPI.AcceptContract( "cljutox5p0v0as60cxcucpy45" );
-         this.Dispatcher.BeginInvokeOnMainThread( ( ) =>
-         {
-            if( contract != null )
-            {
-               Debug.WriteLine( JsonConvert.SerializeObject( contract ) );
-            }
-            else
-            {
-               Debug.WriteLine( "Contract is null" );
             }
          } );
       }

@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:xct="http://xamarin.com/schemas/2020/toolkit"
+             x:Class="SpaceTradersMobile.Views.ContractDetailsPage"
+             Title="{Binding Title}"
+             xmlns:local="clr-namespace:SpaceTradersMobile.ViewModels"  
+             xmlns:model="clr-namespace:SpaceTradersMobile.Models">
+   <ContentPage.Resources>
+      <ResourceDictionary>
+         <xct:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+      </ResourceDictionary>
+   </ContentPage.Resources>
+   <ContentPage.ToolbarItems>
+      <ToolbarItem Text="Accept" 
+         Command="{Binding AcceptContractCommand}"
+         IsEnabled="{Binding accepted,Converter={StaticResource InvertedBoolConverter}}" />
+   </ContentPage.ToolbarItems>
+   <ContentPage.Content>
+      <StackLayout>
+         <StackLayout Padding="10" x:DataType="model:Contract">
+            <StackLayout Orientation="Horizontal">
+               <Label Text="ID:" 
+                           LineBreakMode="NoWrap" 
+                           Style="{DynamicResource ListItemTextStyle}" 
+                           FontSize="16" />
+               <Label Text="{Binding id}" 
+                           LineBreakMode="NoWrap" 
+                           Style="{DynamicResource ListItemTextStyle}" 
+                           FontSize="16" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Accepted"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13"
+                        IsVisible="{Binding accepted}"/>
+               <Label Text="Available"
+                        LineBreakMode="NoWrap"
+                        Style="{DynamicResource ListItemDetailTextStyle}"
+                        FontSize="13"
+                        IsVisible="{Binding accepted,Converter={StaticResource InvertedBoolConverter}}"/>
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="{Binding factionSymbol}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding type}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Expiration:"                         
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding expiration}"                  
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Deadline To Accept:" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding deadlineToAccept}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Deadline:" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding terms.deadline}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Payment On Accepted:"
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding terms.payment.onAccepted}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal">
+               <Label Text="Payment On Fulfilled:"
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+               <Label Text="{Binding terms.payment.onFulfilled}" 
+                           LineBreakMode="NoWrap"
+                           Style="{DynamicResource ListItemDetailTextStyle}"
+                           FontSize="13" />
+            </StackLayout>
+         </StackLayout>
+         <CollectionView x:Name="ContractsListView"
+                ItemsSource="{Binding Deliveries}"
+                SelectionMode="None">
+            <CollectionView.ItemTemplate>
+               <DataTemplate>
+                  <StackLayout x:DataType="model:Delivery">
+                     <StackLayout Orientation="Horizontal">
+                        <Label Text="Trade:"/>
+                        <Label Text="{Binding tradeSymbol}"/>
+                     </StackLayout>
+                     <StackLayout Orientation="Horizontal">
+                        <Label Text="Destination:"/>
+                        <Label Text="{Binding destinationSymbol}"/>
+                     </StackLayout>
+                     <StackLayout Orientation="Horizontal">
+                        <Label Text="Units Required:"/>
+                        <Label Text="{Binding unitsRequired}"/>
+                     </StackLayout>
+                     <StackLayout Orientation="Horizontal">
+                        <Label Text="Units Fulfilled:"/>
+                        <Label Text="{Binding unitsFulfilled}"/>
+                     </StackLayout>
+                  </StackLayout>
+               </DataTemplate>
+            </CollectionView.ItemTemplate>
+         </CollectionView>
+      </StackLayout>
+   </ContentPage.Content>
+</ContentPage>

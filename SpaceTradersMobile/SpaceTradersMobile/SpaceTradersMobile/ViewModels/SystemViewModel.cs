@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using SpaceTradersMobile.Models;
@@ -13,10 +16,12 @@ namespace SpaceTradersMobile.ViewModels
       private string symbol;
       private Models.System system;
       private Services.Navigation navigation;
+      private ObservableCollection< WaypointViewModel > waypoints;
       private SKMatrix matrix;
       private Dictionary< long, SKPoint > touchDictionary;
       private Dictionary< string, SKPaint > paint;
       private Dictionary< string, long > size;
+      private bool listView;
 
       public SystemViewModel( )
       {
@@ -26,6 +31,7 @@ namespace SpaceTradersMobile.ViewModels
             symbol = "Unknown"
          };
          this.navigation = DependencyService.Get< Services.Navigation >( );
+         this.waypoints = new ObservableCollection< WaypointViewModel >( );
          this.matrix = SKMatrix.CreateIdentity( );
          this.touchDictionary = new Dictionary<long, SKPoint>( );
          this.paint = new Dictionary<string, SKPaint>
@@ -37,6 +43,7 @@ namespace SpaceTradersMobile.ViewModels
             { "ASTEROID_FIELD",  new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.DarkGray.ToSKColor( ), StrokeWidth = 1 } },
             { "MOON",            new SKPaint { Style = SKPaintStyle.StrokeAndFill, Color = Color.GhostWhite.ToSKColor( ), StrokeWidth = 1 } }
          };
+         this.listView = false;
 
          this.size = new Dictionary<string, long>
          {
@@ -47,7 +54,14 @@ namespace SpaceTradersMobile.ViewModels
             { "ASTEROID_FIELD",  10 },
             { "MOON",            10 }
          };
+         this.ListViewCommand = new Command( ( ) => this.ListView = !this.listView );
+         this.LoadWaypointsCommand = new Command( async( ) => await ExecuteLoadWaypointsCommand( ) );
+         this.WaypointTapped = new Command< WaypointViewModel >( OnWaypointSelected );
       }
+
+      public Command ListViewCommand { get; }
+      public Command LoadWaypointsCommand { get; }      
+      public Command< WaypointViewModel > WaypointTapped { get; }
 
       public string Symbol
       {
@@ -57,11 +71,28 @@ namespace SpaceTradersMobile.ViewModels
          }
          set
          {
-            this.symbol = value;
+            LoadSystem( value );
             this.Title = value;
-            LoadSystem( value );  
+            OnPropertyChanged( "Title" );
+            SetProperty( ref this.symbol, value );
+            OnPropertyChanged( "Symbol" );
          }
       }
+
+      public bool ListView
+      {
+         get
+         {
+            return ( this.listView );
+         }
+         set
+         {
+            SetProperty( ref this.listView, value );
+            OnPropertyChanged( "ListView" );
+         }
+      }
+
+      public ObservableCollection<WaypointViewModel> Waypoints { get => this.waypoints; }
 
       public void Draw( SKCanvas canvas )
       {
@@ -212,6 +243,40 @@ namespace SpaceTradersMobile.ViewModels
       {
          this.system = await App.SystemDatabase.GetSystemAsync( symbol );
          this.system.waypoints = await navigation.GetSystemWaypoints( symbol );
+         this.IsBusy = true;
+      }
+
+      public async Task ExecuteLoadWaypointsCommand( )
+      {
+         this.IsBusy = true;
+
+         try
+         {
+            this.waypoints.Clear( );
+            foreach( var waypoint in this.system.waypoints )
+            {
+               WaypointViewModel waypointVM = new WaypointViewModel( );
+               await waypointVM.Initialize( waypoint.systemSymbol, waypoint.symbol );
+               this.waypoints.Add( waypointVM );
+            }
+         }
+         catch( Exception ex )
+         {
+            Debug.Write( ex );
+         }
+         finally
+         {
+            this.IsBusy = false;
+         }
+      }
+
+      public async void OnWaypointSelected( WaypointViewModel waypoint )
+      {
+         if( waypoint != null )
+         {
+            // This will push the ItemDetailPage onto the navigation stack
+            //await Shell.Current.GoToAsync( $"{nameof( ItemDetailPage )}?{nameof( ItemDetailViewModel.ItemId )}={item.Id}" );
+         }
       }
    }
 }
